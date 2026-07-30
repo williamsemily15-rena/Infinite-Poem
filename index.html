@@ -1,8 +1,1384 @@
-audio-shuffler/
-│
-├── index.html
-├── style.css
-├── script.js
-├── README.md
-├── favicon.png
-└── assets/
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Audio Shuffle Player</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+
+<style>
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:"Inter",sans-serif;
+}
+
+
+body{
+
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:
+    linear-gradient(
+        135deg,
+        #0f172a,
+        #1e293b,
+        #020617
+    );
+
+    color:white;
+
+    padding:30px;
+
+}
+
+
+.container{
+
+    width:100%;
+    max-width:900px;
+
+    background:
+    rgba(255,255,255,0.08);
+
+    backdrop-filter:blur(20px);
+
+    border-radius:30px;
+
+    padding:35px;
+
+    box-shadow:
+    0 20px 60px rgba(0,0,0,.5);
+
+}
+
+
+
+h1{
+
+    font-size:34px;
+    margin-bottom:8px;
+
+}
+
+
+.subtitle{
+
+    opacity:.7;
+
+    margin-bottom:30px;
+
+}
+
+
+
+/* Now Playing */
+
+.now-playing{
+
+    text-align:center;
+
+    margin:25px 0;
+
+}
+
+
+.now-playing h2{
+
+    font-size:22px;
+
+}
+
+
+#currentTrack{
+
+    margin-top:8px;
+
+    color:#60a5fa;
+
+}
+
+
+
+/* Visualizer */
+
+
+.visualizer{
+
+    height:100px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:7px;
+
+}
+
+
+.bar{
+
+    width:10px;
+
+    height:30px;
+
+    background:#3b82f6;
+
+    border-radius:20px;
+
+    animation:pulse 1s infinite alternate;
+
+}
+
+
+.bar:nth-child(2){
+    animation-delay:.1s;
+}
+
+.bar:nth-child(3){
+    animation-delay:.2s;
+}
+
+.bar:nth-child(4){
+    animation-delay:.3s;
+}
+
+.bar:nth-child(5){
+    animation-delay:.4s;
+}
+
+.bar:nth-child(6){
+    animation-delay:.5s;
+}
+
+
+@keyframes pulse{
+
+    from{
+        height:20px;
+    }
+
+    to{
+        height:80px;
+    }
+
+}
+
+
+
+/* Progress */
+
+
+.progress-area{
+
+    margin-top:25px;
+
+}
+
+
+input[type="range"]{
+
+    width:100%;
+
+    accent-color:#3b82f6;
+
+}
+
+
+.times{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    font-size:14px;
+
+    opacity:.7;
+
+    margin-top:5px;
+
+}
+
+
+
+/* Controls */
+
+
+.controls{
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:15px;
+
+    flex-wrap:wrap;
+
+    margin-top:25px;
+
+}
+
+
+button{
+
+    background:#2563eb;
+
+    color:white;
+
+    border:none;
+
+    border-radius:15px;
+
+    padding:14px 22px;
+
+    font-size:16px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+
+button:hover{
+
+    background:#3b82f6;
+
+    transform:translateY(-2px);
+
+}
+
+
+.secondary{
+
+    background:#334155;
+
+}
+
+
+.secondary:hover{
+
+    background:#475569;
+
+}
+
+
+
+/* Volume */
+
+
+.volume{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    margin-top:25px;
+
+}
+
+
+
+/* Playlist */
+
+
+.playlist-title{
+
+    margin-top:35px;
+
+    margin-bottom:10px;
+
+}
+
+
+.playlist{
+
+    background:
+    rgba(255,255,255,.05);
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    max-height:300px;
+
+    overflow-y:auto;
+
+}
+
+
+
+.song{
+
+    padding:15px 20px;
+
+    border-bottom:
+    1px solid rgba(255,255,255,.08);
+
+    cursor:pointer;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    transition:.2s;
+
+}
+
+
+.song:hover{
+
+    background:
+    rgba(255,255,255,.08);
+
+}
+
+
+.song.active{
+
+    background:#2563eb;
+
+}
+
+
+.song:last-child{
+
+    border-bottom:none;
+
+}
+
+
+
+
+@media(max-width:600px){
+
+    .container{
+
+        padding:20px;
+
+    }
+
+
+    button{
+
+        width:100%;
+
+    }
+
+}
+
+
+</style>
+
+</head>
+
+
+
+<body>
+
+
+<div class="container">
+
+
+<h1>
+🎵 Audio Shuffle Player
+</h1>
+
+
+<p class="subtitle">
+Your personal shuffled audio library
+</p>
+
+
+
+<div class="now-playing">
+
+<h2>
+Now Playing
+</h2>
+
+<div id="currentTrack">
+Loading...
+</div>
+
+</div>
+
+
+
+
+<div class="visualizer">
+
+<div class="bar"></div>
+<div class="bar"></div>
+<div class="bar"></div>
+<div class="bar"></div>
+<div class="bar"></div>
+<div class="bar"></div>
+
+</div>
+
+
+
+
+
+<div class="progress-area">
+
+<input
+type="range"
+id="progress"
+min="0"
+max="100"
+value="0">
+
+
+<div class="times">
+
+<span id="currentTime">
+0:00
+</span>
+
+
+<span id="duration">
+0:00
+</span>
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="controls">
+
+
+<button id="previous">
+⏮ Previous
+</button>
+
+
+<button id="play">
+▶ Play
+</button>
+
+
+<button id="next">
+⏭ Next
+</button>
+
+
+<button id="shuffle" class="secondary">
+🔀 Shuffle ON
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="volume">
+
+<span>
+🔊
+</span>
+
+<input
+type="range"
+id="volume"
+min="0"
+max="1"
+step="0.01"
+value="0.8">
+
+</div>
+
+
+
+
+
+<h2 class="playlist-title">
+Playlist
+</h2>
+
+
+<div
+class="playlist"
+id="playlist">
+
+
+</div>
+
+
+
+
+
+<audio id="audio"></audio>
+
+
+
+<script>
+
+// ===============================
+// AUDIO LIBRARY
+// ===============================
+
+// Add your files here
+
+const audioFiles = [
+
+    "audio/clip1.mp3",
+    "audio/clip2.mp3",
+    "audio/clip3.mp3"
+
+];
+
+
+
+// ===============================
+// PLAYER VARIABLES
+// ===============================
+
+
+const audio = document.getElementById("audio");
+
+const playlistElement = document.getElementById("playlist");
+
+const playButton = document.getElementById("play");
+
+const nextButton = document.getElementById("next");
+
+const previousButton = document.getElementById("previous");
+
+const shuffleButton = document.getElementById("shuffle");
+
+const progress = document.getElementById("progress");
+
+const volume = document.getElementById("volume");
+
+const currentTrack =
+document.getElementById("currentTrack");
+
+const currentTime =
+document.getElementById("currentTime");
+
+const duration =
+document.getElementById("duration");
+
+
+
+let playlist = [];
+
+let currentIndex = 0;
+
+let shuffleEnabled = true;
+
+let shuffleQueue = [];
+
+
+
+
+// ===============================
+// LOAD AUDIO LIBRARY
+// ===============================
+
+
+function loadAudioLibrary(){
+
+
+    audioFiles.forEach((file,index)=>{
+
+
+        const name =
+        file
+        .split("/")
+        .pop()
+        .replace(/\.[^/.]+$/, "");
+
+
+
+        playlist.push({
+
+            name:name,
+
+            file:file,
+
+            duration:"0:00"
+
+        });
+
+
+    });
+
+
+
+    createShuffleQueue();
+
+    renderPlaylist();
+
+
+    if(playlist.length > 0){
+
+        loadSong(0);
+
+    }
+
+
+}
+
+
+
+
+
+// ===============================
+// CREATE SHUFFLE QUEUE
+// ===============================
+
+
+function createShuffleQueue(){
+
+
+    shuffleQueue=[];
+
+
+    for(let i=0;i<playlist.length;i++){
+
+        shuffleQueue.push(i);
+
+    }
+
+
+
+    for(
+        let i=shuffleQueue.length-1;
+        i>0;
+        i--
+    ){
+
+        let j=Math.floor(
+            Math.random()*(i+1)
+        );
+
+
+        [
+            shuffleQueue[i],
+            shuffleQueue[j]
+
+        ] =
+        [
+            shuffleQueue[j],
+            shuffleQueue[i]
+        ];
+
+    }
+
+
+}
+
+
+
+
+
+// ===============================
+// LOAD SONG
+// ===============================
+
+
+function loadSong(index){
+
+
+    currentIndex=index;
+
+
+    audio.src =
+    playlist[index].file;
+
+
+    currentTrack.textContent =
+    playlist[index].name;
+
+
+    renderPlaylist();
+
+
+}
+
+
+
+
+
+// ===============================
+// PLAYLIST DISPLAY
+// ===============================
+
+
+function renderPlaylist(){
+
+
+    playlistElement.innerHTML="";
+
+
+
+    playlist.forEach((song,index)=>{
+
+
+        const item =
+        document.createElement("div");
+
+
+        item.className="song";
+
+
+
+        if(index===currentIndex){
+
+            item.classList.add("active");
+
+        }
+
+
+
+        item.innerHTML=`
+
+            <span>
+            ${index+1}. ${song.name}
+            </span>
+
+            <span>
+            ${song.duration}
+            </span>
+
+        `;
+
+
+
+        item.onclick=()=>{
+
+            loadSong(index);
+
+            playAudio();
+
+        };
+
+
+
+        playlistElement.appendChild(item);
+
+
+    });
+
+
+}
+
+
+
+
+
+// ===============================
+// PLAY / PAUSE
+// ===============================
+
+
+function playAudio(){
+
+
+    audio.play();
+
+
+    playButton.textContent =
+    "⏸ Pause";
+
+
+}
+
+
+
+function pauseAudio(){
+
+
+    audio.pause();
+
+
+    playButton.textContent =
+    "▶ Play";
+
+
+}
+
+
+
+
+playButton.onclick=()=>{
+
+
+    if(audio.paused){
+
+        playAudio();
+
+    }
+    else{
+
+        pauseAudio();
+
+    }
+
+
+};
+
+
+
+
+// ===============================
+// TIME FORMAT
+// ===============================
+
+
+function formatTime(seconds){
+
+
+    if(isNaN(seconds)){
+
+        return "0:00";
+
+    }
+
+
+    let minutes =
+    Math.floor(seconds/60);
+
+
+    let secondsRemaining =
+    Math.floor(seconds%60);
+
+
+
+    return (
+
+        minutes +
+        ":" +
+        (secondsRemaining < 10
+        ? "0"
+        :"")
+        +
+        secondsRemaining
+
+    );
+
+
+}
+
+
+
+
+
+// ===============================
+// INITIALIZE
+// ===============================
+
+
+loadAudioLibrary();
+// ===============================
+// NEXT SONG
+// ===============================
+
+
+function nextSong(){
+
+
+    if(playlist.length===0){
+
+        return;
+
+    }
+
+
+
+    if(shuffleEnabled){
+
+
+        if(shuffleQueue.length===0){
+
+            createShuffleQueue();
+
+        }
+
+
+
+        let nextIndex =
+        shuffleQueue.shift();
+
+
+
+        // Prevent immediate repeat
+
+        while(
+            nextIndex===currentIndex &&
+            playlist.length>1
+        ){
+
+            shuffleQueue.push(nextIndex);
+
+            nextIndex =
+            shuffleQueue.shift();
+
+        }
+
+
+
+        loadSong(nextIndex);
+
+
+    }
+    else{
+
+
+        currentIndex++;
+
+
+        if(currentIndex>=playlist.length){
+
+            currentIndex=0;
+
+        }
+
+
+        loadSong(currentIndex);
+
+
+    }
+
+
+
+    playAudio();
+
+
+}
+
+
+
+
+
+// ===============================
+// PREVIOUS SONG
+// ===============================
+
+
+function previousSong(){
+
+
+    currentIndex--;
+
+
+    if(currentIndex<0){
+
+        currentIndex=
+        playlist.length-1;
+
+    }
+
+
+    loadSong(currentIndex);
+
+    playAudio();
+
+
+}
+
+
+
+
+
+nextButton.onclick=()=>{
+
+    nextSong();
+
+};
+
+
+
+previousButton.onclick=()=>{
+
+    previousSong();
+
+};
+
+
+
+
+
+
+
+// ===============================
+// SHUFFLE BUTTON
+// ===============================
+
+
+shuffleButton.onclick=()=>{
+
+
+    shuffleEnabled =
+    !shuffleEnabled;
+
+
+
+    if(shuffleEnabled){
+
+        shuffleButton.textContent =
+        "🔀 Shuffle ON";
+
+        createShuffleQueue();
+
+    }
+    else{
+
+        shuffleButton.textContent =
+        "➡ Sequential";
+
+    }
+
+
+};
+
+
+
+
+
+
+
+// ===============================
+// AUTOMATIC NEXT TRACK
+// ===============================
+
+
+audio.addEventListener(
+"ended",
+()=>{
+
+    nextSong();
+
+});
+
+
+
+
+
+
+
+
+// ===============================
+// TRACK LENGTH
+// ===============================
+
+
+audio.addEventListener(
+"loadedmetadata",
+()=>{
+
+
+    duration.textContent =
+    formatTime(audio.duration);
+
+
+
+    playlist[currentIndex].duration =
+    formatTime(audio.duration);
+
+
+
+    renderPlaylist();
+
+
+});
+
+
+
+
+
+
+
+
+// ===============================
+// PROGRESS BAR
+// ===============================
+
+
+audio.addEventListener(
+"timeupdate",
+()=>{
+
+
+    progress.max =
+    audio.duration;
+
+
+
+    progress.value =
+    audio.currentTime;
+
+
+
+    currentTime.textContent =
+    formatTime(audio.currentTime);
+
+
+});
+
+
+
+
+
+
+progress.oninput=()=>{
+
+
+    audio.currentTime =
+    progress.value;
+
+
+};
+
+
+
+
+
+
+
+
+// ===============================
+// VOLUME
+// ===============================
+
+
+audio.volume =
+volume.value;
+
+
+
+volume.oninput=()=>{
+
+
+    audio.volume =
+    volume.value;
+
+
+};
+
+
+
+
+
+
+// ===============================
+// KEYBOARD SHORTCUTS
+// ===============================
+
+
+document.addEventListener(
+"keydown",
+(event)=>{
+
+
+    // Ignore when typing
+
+    if(
+        event.target.tagName==="INPUT"
+    ){
+
+        return;
+
+    }
+
+
+
+    if(event.code==="Space"){
+
+        event.preventDefault();
+
+
+        if(audio.paused){
+
+            playAudio();
+
+        }
+        else{
+
+            pauseAudio();
+
+        }
+
+    }
+
+
+
+    if(event.code==="ArrowRight"){
+
+        nextSong();
+
+    }
+
+
+
+    if(event.code==="ArrowLeft"){
+
+        previousSong();
+
+    }
+
+
+
+});
+
+// ===============================
+// SAVE USER SETTINGS
+// ===============================
+
+
+const savedVolume =
+localStorage.getItem("audioVolume");
+
+
+if(savedVolume !== null){
+
+    volume.value = savedVolume;
+
+    audio.volume = savedVolume;
+
+}
+
+
+
+const savedShuffle =
+localStorage.getItem("shuffleMode");
+
+
+if(savedShuffle !== null){
+
+    shuffleEnabled =
+    savedShuffle === "true";
+
+
+    shuffleButton.textContent =
+    shuffleEnabled
+    ? "🔀 Shuffle ON"
+    : "➡ Sequential";
+
+}
+
+
+
+
+
+
+volume.addEventListener(
+"change",
+()=>{
+
+
+    localStorage.setItem(
+        "audioVolume",
+        volume.value
+    );
+
+
+});
+
+
+
+
+
+shuffleButton.addEventListener(
+"click",
+()=>{
+
+
+    localStorage.setItem(
+        "shuffleMode",
+        shuffleEnabled
+    );
+
+
+});
+
+
+
+
+
+
+
+// ===============================
+// HANDLE AUDIO ERRORS
+// ===============================
+
+
+audio.addEventListener(
+"error",
+()=>{
+
+
+    currentTrack.textContent =
+    "Unable to load audio file";
+
+
+});
+
+
+
+
+
+
+
+
+// ===============================
+// START MESSAGE
+// ===============================
+
+
+if(audioFiles.length===0){
+
+
+    currentTrack.textContent =
+    "No audio files found";
+
+
+}
+
+
+
+
+
+
+
+// ===============================
+// START PLAYER
+// ===============================
+
+
+console.log(
+"Audio Shuffle Player Loaded"
+);
+</script>
+
+</body>
+
+</html>
